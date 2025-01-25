@@ -11,5 +11,8 @@ class CameraReady extends CameraState {
   final CameraController controller;
   final List<CameraDescription> cameras;
   final double zoomLevel;
-  CameraReady(this.controller, this.cameras, this.zoomLevel);
+  final double aspectRatio;
+  CameraReady(this.controller, this.cameras, this.zoomLevel, this.aspectRatio);
 }
+
+class CameraBusy extends CameraState {}
