@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:gallery_two/bloc/camera_message/camera_message_cubit.dart';
 import 'package:meta/meta.dart';
 
 import 'package:permission_handler/permission_handler.dart';
@@ -7,11 +8,16 @@ import 'package:camera/camera.dart';
 part 'camera_state.dart';
 
 class CameraCubit extends Cubit<CameraState> {
-  CameraCubit() : super(CameraPermissionMissing());
+  CameraCubit(this._messageCubit) : super(CameraPermissionMissing());
+  final CameraMessageCubit _messageCubit;
   CameraController? _controller;
   late List<CameraDescription> _cameras;
 
   double _zoomLevel = 1.0;
+
+  CameraMessageCubit get messageCubit {
+    return _messageCubit;
+  }
 
   adjustZoom(double zoomLevel) {
     if (state is! CameraReady) {
@@ -28,15 +34,16 @@ class CameraCubit extends Cubit<CameraState> {
     emit(CameraReady(_controller!, _cameras, _zoomLevel));
   }
 
-  Future<void> _loadCameras() async {
-    _cameras = await availableCameras();
-  }
-
   Future<void> loadCamera() async {
     _cameras = await availableCameras();
     _controller = CameraController(_cameras[0], ResolutionPreset.max);
     await _controller?.initialize();
     emit(CameraReady(_controller!, _cameras, _zoomLevel));
+  }
+
+  Future<void> takePicture() async {
+    _controller?.takePicture();
+    _messageCubit.newMessage("Bild erstellt");
   }
 
   Future<void> closeCamera() async {
