@@ -109,83 +109,71 @@ class _CameraScreenState extends State<CameraScreen>
             }
             
             if (state is CameraReady) {
-              return Stack(
-                children: [
-                   // Preview
-                  Positioned.fill(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return GestureDetector(
-                          onScaleUpdate: (details) => _onPinchUpdate(details, state.zoomLevel),
-                          onTapUp: (details) => _handleTapFocus(details, constraints),
-                          child: Center(
-                            child: AspectRatio(
-                              aspectRatio: state.aspectRatio,
-                              child: CameraPreview(state.controller),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+              return OrientationBuilder(
+                builder: (context, orientation) {
+                  // Calculate correct aspect ratio based on orientation
+                  double aspectRatio = state.aspectRatio;
+                  if (orientation == Orientation.portrait && aspectRatio > 1.0) {
+                     aspectRatio = 1.0 / aspectRatio;
+                  }
 
-                  // Focus Indicator
-                  if (_showFocusCircle)
-                    Positioned(
-                      left: _focusPoint.dx - 25,
-                      top: _focusPoint.dy - 25,
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white, width: 2),
-                          shape: BoxShape.circle,
+                  return Stack(
+                    children: [
+                       // Preview
+                      Positioned.fill(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return GestureDetector(
+                              onScaleUpdate: (details) => _onPinchUpdate(details, state.zoomLevel),
+                              onTapUp: (details) => _handleTapFocus(details, constraints),
+                              child: Center(
+                                child: AspectRatio(
+                                  aspectRatio: aspectRatio,
+                                  child: CameraPreview(state.controller),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
-                    ),
 
-                  // Flash Animation Overlay
-                  AnimatedBuilder(
-                    animation: _flashOpacity,
-                    builder: (context, child) {
-                      return IgnorePointer(
-                        child: Container(
-                          color: Colors.white.withOpacity(_flashOpacity.value),
+                      // Focus Indicator
+                      if (_showFocusCircle)
+                        Positioned(
+                          left: _focusPoint.dx - 25,
+                          top: _focusPoint.dy - 25,
+                          child: Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.white, width: 2),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                  ),
 
-                  // Controls Layer
-                  Column(
-                    children: [
-                       // Top Bar
-                       _buildTopBar(state),
-                       
-                       const Spacer(),
-                       
-                       // Zoom Presets
-                       _buildZoomPresets(state),
-                       
-                       // Zoom Slider
-                       Padding(
-                         padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 10),
-                         child: ZoomSlider(
-                           value: state.zoomLevel,
-                           min: state.minZoomLevel,
-                           max: state.maxZoomLevel,
-                           onChanged: (val) => _camCubit.adjustZoom(val),
-                         ),
-                       ),
-                       
-                       // Bottom Bar
-                       _buildBottomBar(state),
+                      // Flash Animation Overlay
+                      AnimatedBuilder(
+                        animation: _flashOpacity,
+                        builder: (context, child) {
+                          return IgnorePointer(
+                            child: Container(
+                              color: Colors.white.withOpacity(_flashOpacity.value),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Controls Layer
+                      orientation == Orientation.portrait 
+                          ? _buildPortraitControls(state) 
+                          : _buildLandscapeControls(state),
+                      
+                      // Messages
+                      _messageArea(),
                     ],
-                  ),
-                  
-                  // Messages
-                  _messageArea(),
-                ],
+                  );
+                }
               );
             }
             
@@ -196,6 +184,125 @@ class _CameraScreenState extends State<CameraScreen>
     );
   }
 
+  Widget _buildPortraitControls(CameraReady state) {
+    return Column(
+      children: [
+         // Top Bar
+         _buildTopBar(state),
+         
+         const Spacer(),
+         
+         // Zoom Presets
+         _buildZoomPresets(state),
+         
+         // Zoom Slider
+         Padding(
+           padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 10),
+           child: ZoomSlider(
+             value: state.zoomLevel,
+             min: state.minZoomLevel,
+             max: state.maxZoomLevel,
+             onChanged: (val) => _camCubit.adjustZoom(val),
+           ),
+         ),
+         
+         // Bottom Bar
+         _buildBottomBar(state),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeControls(CameraReady state) {
+    return Stack(
+      children: [
+        // Left Controls (Flash, Lens)
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          child: Container(
+            width: 80,
+            color: Colors.black26,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildFlashButton(state),
+                if (_hasMultipleLenses(state)) _buildLensButton(),
+              ],
+            ),
+          ),
+        ),
+
+        // Right Controls (Shutter, Gallery, Switch Camera)
+        Positioned(
+          right: 0,
+          top: 0,
+          bottom: 0,
+          child: Container(
+            width: 100,
+            color: Colors.black54,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                 // Switch Camera (Top)
+                 IconButton(
+                   icon: const Icon(Icons.cameraswitch, color: Colors.white, size: 30),
+                   onPressed: () => _camCubit.switchCamera(),
+                 ),
+                 
+                 // Shutter Button (Center)
+                 CaptureButton(
+                   size: 70,
+                   onPressed: () async {
+                     _flashController.forward(from: 0.0);
+                     await _camCubit.takePicture();
+                   },
+                 ),
+                 
+                 // Gallery Preview (Bottom)
+                 _lastImagePreview(state),
+              ],
+            ),
+          ),
+        ),
+        
+        // Zoom Controls (Vertical Slider + Presets)
+        Positioned(
+          right: 100, // Next to right controls
+          top: 40,
+          bottom: 40,
+          child: SizedBox(
+            width: 60,
+            child: Column(
+               mainAxisAlignment: MainAxisAlignment.center,
+               children: [
+                  // Vertical Slider
+                  Expanded(
+                    child: RotatedBox(
+                      quarterTurns: 3, // Rotate -90 deg (Vertical, bottom-to-top)
+                      child: ZoomSlider(
+                         value: state.zoomLevel,
+                         min: state.minZoomLevel,
+                         max: state.maxZoomLevel,
+                         onChanged: (val) => _camCubit.adjustZoom(val),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 10),
+
+                  // Vertical Presets
+                  _buildZoomPresetsVertical(state),
+               ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTopBar(CameraReady state) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -203,58 +310,65 @@ class _CameraScreenState extends State<CameraScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: Icon(
-              state.flashMode == FlashMode.off
-                  ? Icons.flash_off
-                  : state.flashMode == FlashMode.auto
-                      ? Icons.flash_auto
-                      : state.flashMode == FlashMode.always
-                          ? Icons.flash_on
-                          : Icons.highlight, // Icon for torch mode
-              color: state.flashMode == FlashMode.torch
-                  ? Colors.yellow
-                  : Colors.white,
-            ),
-            onPressed: () {
-              FlashMode nextMode;
-              if (state.flashMode == FlashMode.off) {
-                nextMode = FlashMode.auto;
-              } else if (state.flashMode == FlashMode.auto) {
-                nextMode = FlashMode.always;
-              } else if (state.flashMode == FlashMode.always) {
-                nextMode = FlashMode.torch;
-              } else {
-                nextMode = FlashMode.off;
-              }
-              _camCubit.setFlashMode(nextMode);
-            },
-          ),
-          // Lens Switch Button
-          // Show this button if there are MULTIPLE cameras with same lens direction
-          // This allows cycling between Back Main, Back Wide, Back Tele etc.
-          if (state.cameras
-                  .where((c) =>
-                      c.lensDirection == state.controller.description.lensDirection)
-                  .length >
-              1)
-            TextButton.icon(
-              onPressed: () => _camCubit.switchLens(),
-              icon: const Icon(Icons.switch_camera_outlined, color: Colors.white),
-              label: Text(
-                 "LENS", // Or display current camera ID?
-                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              style: TextButton.styleFrom(
-                 backgroundColor: Colors.black45,
-                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
-              ),
-            ),
+          _buildFlashButton(state),
+          if (_hasMultipleLenses(state)) _buildLensButton(),
         ],
       ),
     );
   }
   
+  Widget _buildFlashButton(CameraReady state) {
+    return IconButton(
+      icon: Icon(
+        state.flashMode == FlashMode.off
+            ? Icons.flash_off
+            : state.flashMode == FlashMode.auto
+                ? Icons.flash_auto
+                : state.flashMode == FlashMode.always
+                    ? Icons.flash_on
+                    : Icons.highlight, // Icon for torch mode
+        color: state.flashMode == FlashMode.torch
+            ? Colors.yellow
+            : Colors.white,
+      ),
+      onPressed: () {
+        FlashMode nextMode;
+        if (state.flashMode == FlashMode.off) {
+          nextMode = FlashMode.auto;
+        } else if (state.flashMode == FlashMode.auto) {
+          nextMode = FlashMode.always;
+        } else if (state.flashMode == FlashMode.always) {
+          nextMode = FlashMode.torch;
+        } else {
+          nextMode = FlashMode.off;
+        }
+        _camCubit.setFlashMode(nextMode);
+      },
+    );
+  }
+
+  bool _hasMultipleLenses(CameraReady state) {
+    return state.cameras
+            .where((c) =>
+                c.lensDirection == state.controller.description.lensDirection)
+            .length > 1;
+  }
+
+  Widget _buildLensButton() {
+    return TextButton.icon(
+      onPressed: () => _camCubit.switchLens(),
+      icon: const Icon(Icons.switch_camera_outlined, color: Colors.white),
+      label: Text(
+         "LENS",
+         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+      style: TextButton.styleFrom(
+         backgroundColor: Colors.black45,
+         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
+      ),
+    );
+  }
+
   Widget _buildZoomPresets(CameraReady state) {
     List<Widget> buttons = [];
     
@@ -279,6 +393,30 @@ class _CameraScreenState extends State<CameraScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: buttons,
       ),
+    );
+  }
+
+  Widget _buildZoomPresetsVertical(CameraReady state) {
+    List<Widget> buttons = [];
+    
+    // Always add 1x button
+    buttons.add(_zoomPresetButton(state, 1.0));
+    
+    // Add 2x (Max) at the TOP (beginning of list)
+    if (state.maxZoomLevel >= 2.0) {
+      buttons.insert(0, const SizedBox(height: 10));
+      buttons.insert(0, _zoomPresetButton(state, 2.0));
+    }
+
+    // Add 0.5x (Min) at the BOTTOM (end of list)
+    if (state.minZoomLevel <= 0.6) {
+      buttons.add(const SizedBox(height: 10));
+      buttons.add(_zoomPresetButton(state, 0.5));
+    }
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: buttons,
     );
   }
 

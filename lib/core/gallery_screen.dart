@@ -82,11 +82,16 @@ class _GalleryScreenState extends State<GalleryScreen> {
     );
   }
 
-  Widget _gallery(galleryItems) {
+  Widget _gallery(Map<String, List<GalleryImageFile>> galleryItems) {
+    final orientation = MediaQuery.of(context).orientation;
+    final int crossAxisCount = orientation == Orientation.portrait ? 3 : 6;
+
     return ListView.builder(
       itemCount: galleryItems.length,
       itemBuilder: (context, index) {
         final date = galleryItems.keys.elementAt(index);
+        final List<GalleryImageFile> images = galleryItems[date]!;
+        
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -103,14 +108,14 @@ class _GalleryScreenState extends State<GalleryScreen> {
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
                 crossAxisSpacing: 10.0,
                 mainAxisSpacing: 10.0,
               ),
-              itemCount: galleryItems[date]!.length,
+              itemCount: images.length,
               itemBuilder: (context, index) {
-                return _image(galleryItems[date]![index]);
+                return _image(images[index]);
               },
             ),
           ],

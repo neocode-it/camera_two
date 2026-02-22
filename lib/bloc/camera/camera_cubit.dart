@@ -142,14 +142,7 @@ class CameraCubit extends Cubit<CameraState> {
 
       await _controller!.initialize();
       
-      double aspectRatio = _controller!.value.aspectRatio;
-      if (Platform.isAndroid || Platform.isIOS) {
-         // Mobile cameras are usually landscape, so we invert for portrait UI
-         if (aspectRatio > 1.0) {
-           aspectRatio = 1.0 / aspectRatio;
-         }
-      }
-      _aspectRatio = aspectRatio;
+      _aspectRatio = _controller!.value.aspectRatio;
       _minZoomLevel = await _controller!.getMinZoomLevel();
       _maxZoomLevel = await _controller!.getMaxZoomLevel();
       
