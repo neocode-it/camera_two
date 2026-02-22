@@ -40,4 +40,16 @@ class GalleryCubit extends Cubit<GalleryState> {
       await loadGallery();
     }
   }
+
+  Future<int> deleteImagesOlderThan(Duration duration) async {
+    emit(GalleryLoading());
+    int count = 0;
+    try {
+      count = await fileRepo.deleteImagesOlderThan(duration);
+      await loadGallery();
+    } catch (e) {
+      await loadGallery();
+    }
+    return count;
+  }
 }

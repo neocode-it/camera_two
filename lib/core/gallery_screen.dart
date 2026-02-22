@@ -76,9 +76,99 @@ class _GalleryScreenState extends State<GalleryScreen> {
           }
           return AppBar(
             title: const Text("Galerie"),
+            actions: [
+              IconButton(
+                onPressed: () => _showCleanupOptions(context),
+                icon: const Icon(Icons.cleaning_services_outlined),
+                tooltip: 'Alte Bilder löschen',
+              ),
+            ],
           );
         },
       ),
+    );
+  }
+
+  void _showCleanupOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  "Speicherplatz freigeben",
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_sweep),
+                title: const Text('Älter als 1 Woche löschen'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final count = await context
+                      .read<GalleryCubit>()
+                      .deleteImagesOlderThan(const Duration(days: 7));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('$count Bilder gelöscht')),
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_sweep),
+                title: const Text('Älter als 1 Monat löschen'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final count = await context
+                      .read<GalleryCubit>()
+                      .deleteImagesOlderThan(const Duration(days: 30));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('$count Bilder gelöscht')),
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_sweep),
+                title: const Text('Älter als 6 Monate löschen'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final count = await context
+                      .read<GalleryCubit>()
+                      .deleteImagesOlderThan(const Duration(days: 180));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('$count Bilder gelöscht')),
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_sweep),
+                title: const Text('Älter als 1 Jahr löschen'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final count = await context
+                      .read<GalleryCubit>()
+                      .deleteImagesOlderThan(const Duration(days: 365));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('$count Bilder gelöscht')),
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
   }
 

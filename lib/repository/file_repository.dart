@@ -119,4 +119,26 @@ class FileRepository {
     }
     return null;
   }
+
+  Future<int> deleteImagesOlderThan(Duration duration) async {
+    int count = 0;
+    final directory = await getExternalStorageDirectory();
+    if (directory == null) return 0;
+
+    final mediaDir = Directory('${directory.path}/media');
+    if (!mediaDir.existsSync()) return 0;
+
+    final cutoff = DateTime.now().subtract(duration);
+    final List<FileSystemEntity> files = mediaDir.listSync(recursive: true);
+
+    for (var file in files) {
+      if (file is File) {
+        if (file.lastModifiedSync().isBefore(cutoff)) {
+          await file.delete();
+          count++;
+        }
+      }
+    }
+    return count;
+  }
 }
