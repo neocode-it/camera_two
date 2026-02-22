@@ -18,6 +18,8 @@ class MainApp extends StatelessWidget {
         BlocProvider<NavigationCubit>(create: (context) => NavigationCubit()),
         BlocProvider<CameraCubit>(
             create: (context) => CameraCubit(CameraMessageCubit())),
+        BlocProvider<GalleryCubit>(create: (context) => GalleryCubit()),
+        BlocProvider<SelectionCubit>(create: (context) => SelectionCubit()),
       ],
       child: MaterialApp(
         home: BlocBuilder<NavigationCubit, NavigationState>(
@@ -25,15 +27,7 @@ class MainApp extends StatelessWidget {
             return PageView(
               controller: PageController(initialPage: 1),
               children: [
-                MultiBlocProvider(
-                  providers: [
-                    BlocProvider<GalleryCubit>(
-                        create: (context) => GalleryCubit()),
-                    BlocProvider<SelectionCubit>(
-                        create: (context) => SelectionCubit()),
-                  ],
-                  child: const GalleryScreen(),
-                ),
+                const GalleryScreen(),
                 const CameraScreen(),
               ],
             );
