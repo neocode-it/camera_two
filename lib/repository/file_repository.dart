@@ -50,7 +50,13 @@ class FileRepository {
     Map<String, List<GalleryImageFile>> imagesGroupedByDate = {};
 
     final directory = await getExternalStorageDirectory();
-    final mediaDir = Directory('${directory!.path}/media');
+    if (directory == null) {
+      return imagesGroupedByDate;
+    }
+    final mediaDir = Directory('${directory.path}/media');
+    if (!mediaDir.existsSync()) {
+      return imagesGroupedByDate;
+    }
     final List<FileSystemEntity> files = mediaDir.listSync(recursive: true);
 
     int index = 0;

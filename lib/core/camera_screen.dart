@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gallery_two/bloc/camera/camera_cubit.dart';
 import 'package:gallery_two/bloc/camera_message/camera_message_cubit.dart';
-import 'package:simple_animations/animation_builder/play_animation_builder.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});

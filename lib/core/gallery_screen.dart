@@ -24,18 +24,23 @@ class _GalleryScreenState extends State<GalleryScreen> {
     return Scaffold(
       appBar: _appBar(),
       body: BlocBuilder<GalleryCubit, GalleryState>(
-        builder: (context, state) {
-          if (state is GalleryLoaded) {
-            return PopScope(
-              canPop: context.read<SelectionCubit>().state is SelectionActive,
-              onPopInvokedWithResult: (didPop, result) {
-                if (context.read<SelectionCubit>().state is SelectionActive) {
-                  context.read<SelectionCubit>().cancalSelection();
-                } else {
-                  Navigator.pop(context);
-                }
+        builder: (context, galleryState) {
+          if (galleryState is GalleryLoaded) {
+            return BlocBuilder<SelectionCubit, SelectionState>(
+              builder: (context, selectionState) {
+                final bool isSelectionActive =
+                    selectionState is SelectionActive;
+                return PopScope(
+                  canPop: !isSelectionActive,
+                  onPopInvokedWithResult: (didPop, result) {
+                    if (didPop) return;
+                    if (isSelectionActive) {
+                      context.read<SelectionCubit>().cancalSelection();
+                    }
+                  },
+                  child: _gallery(galleryState.gallery),
+                );
               },
-              child: _gallery(state.gallery),
             );
           }
           return const Center(
@@ -60,9 +65,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     await context
                         .read<GalleryCubit>()
                         .deleteSelectedImages(state.indexes);
-                    context.read<SelectionCubit>().cancalSelection();
+                    if (context.mounted) {
+                      context.read<SelectionCubit>().cancalSelection();
+                    }
                   },
-                  icon: Icon(Icons.delete),
+                  icon: const Icon(Icons.delete),
                 )
               ],
             );
