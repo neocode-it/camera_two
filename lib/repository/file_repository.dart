@@ -59,6 +59,9 @@ class FileRepository {
     }
     final List<FileSystemEntity> files = mediaDir.listSync(recursive: true);
 
+    // Sort by modification time, newest first
+    files.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+
     int index = 0;
     for (var file in files) {
       if (file is File) {

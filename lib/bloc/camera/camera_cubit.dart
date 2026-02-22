@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gallery_two/bloc/camera_message/camera_message_cubit.dart';
 import 'package:gallery_two/repository/file_repository.dart';
-import 'package:image/image.dart' as img;
 
 import 'package:permission_handler/permission_handler.dart';
 import 'package:camera/camera.dart';
@@ -134,7 +133,7 @@ class CameraCubit extends Cubit<CameraState> {
 
       _controller = CameraController(
         _cameras[_selectedCameraIndex],
-        ResolutionPreset.max,
+        ResolutionPreset.veryHigh,
         enableAudio: false,
         imageFormatGroup: Platform.isAndroid
             ? ImageFormatGroup.jpeg
@@ -143,6 +142,14 @@ class CameraCubit extends Cubit<CameraState> {
 
       await _controller!.initialize();
       
+      double aspectRatio = _controller!.value.aspectRatio;
+      if (Platform.isAndroid || Platform.isIOS) {
+         // Mobile cameras are usually landscape, so we invert for portrait UI
+         if (aspectRatio > 1.0) {
+           aspectRatio = 1.0 / aspectRatio;
+         }
+      }
+      _aspectRatio = aspectRatio;
       _minZoomLevel = await _controller!.getMinZoomLevel();
       _maxZoomLevel = await _controller!.getMaxZoomLevel();
       
@@ -196,47 +203,13 @@ class CameraCubit extends Cubit<CameraState> {
     try {
       XFile file = await _controller!.takePicture();
 
-      File? imageFile = await _cropToAspectRatio(file.path, _aspectRatio);
-      if (imageFile != null) {
-        String newPath = await fileRepo.copyImage(imageFile.path);
-        _messageCubit.newMessage("Bild erstellt");
-        if (state is CameraReady) {
-          emit((state as CameraReady).copyWith(lastImage: File(newPath)));
-        }
+      String newPath = await fileRepo.copyImage(file.path);
+      _messageCubit.newMessage("Bild erstellt");
+      if (state is CameraReady) {
+        emit((state as CameraReady).copyWith(lastImage: File(newPath)));
       }
     } catch (e) {
       _messageCubit.newMessage("Fehler beim Erstellen des Bildes");
-    }
-  }
-
-  Future<File?> _cropToAspectRatio(String imagePath, double aspectRatio) async {
-    try {
-      final image = img.decodeImage(await File(imagePath).readAsBytes());
-      if (image == null) {
-        throw Exception("Image invalid");
-      }
-
-      final width = image.width;
-      final height = image.height;
-
-      int targetWidth;
-      int targetHeight;
-
-      targetHeight = height;
-      targetWidth = (height * aspectRatio).round();
-
-      // Center cropping logic
-      final x = (width - targetWidth) ~/ 2;
-      final y = (height - targetHeight) ~/ 2;
-
-      final croppedImage = img.copyCrop(image,
-          x: x, y: y, width: targetWidth, height: targetHeight);
-      final croppedFile = File(imagePath);
-
-      await croppedFile.writeAsBytes(img.encodeJpg(croppedImage));
-      return croppedFile;
-    } catch (e) {
-      return null;
     }
   }
 
