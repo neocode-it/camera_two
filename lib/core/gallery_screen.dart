@@ -1,9 +1,9 @@
-import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gallery_two/bloc/gallery/gallerycubit_cubit.dart';
 import 'package:gallery_two/bloc/selection/selection_cubit.dart';
 import 'package:gallery_two/classes/gallery_image_file.dart';
+import 'package:gallery_two/core/widgets/custom_image_viewer.dart';
 
 class GalleryScreen extends StatefulWidget {
   const GalleryScreen({super.key});
@@ -131,7 +131,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
           context.read<SelectionCubit>().toggleSelection(index);
         } else {
           ImageProvider ss = FileImage(file);
-          showImageViewer(context, ss);
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => CustomImageViewer(imageProvider: ss),
+            ),
+          );
         }
       },
       child: BlocBuilder<SelectionCubit, SelectionState>(
