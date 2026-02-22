@@ -82,4 +82,27 @@ class FileRepository {
       await file.delete();
     }
   }
+
+  Future<File?> getLastImage() async {
+    final directory = await getExternalStorageDirectory();
+    if (directory == null) {
+      return null;
+    }
+    final mediaDir = Directory('${directory.path}/media');
+    if (!mediaDir.existsSync()) {
+      return null;
+    }
+    final List<FileSystemEntity> files = mediaDir.listSync(recursive: true);
+    if (files.isEmpty) return null;
+
+    // Sort by modification time, newest first
+    files.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+
+    for (var file in files) {
+      if (file is File) {
+        return file;
+      }
+    }
+    return null;
+  }
 }
