@@ -153,8 +153,8 @@ class CameraCubit extends Cubit<CameraState> {
       _minZoomLevel = await _controller!.getMinZoomLevel();
       _maxZoomLevel = await _controller!.getMaxZoomLevel();
       
-      // Reset zoom to min or 1.0
-      _zoomLevel = _minZoomLevel; 
+      // Reset zoom to 1.0, clamped within min/max
+      _zoomLevel = 1.0.clamp(_minZoomLevel, _maxZoomLevel); 
       await _controller!.setZoomLevel(_zoomLevel);
       
       // Set initial flash mode
