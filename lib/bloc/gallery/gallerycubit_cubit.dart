@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:bloc/bloc.dart';
 import 'package:outtake/classes/gallery_image_file.dart';
 import 'package:meta/meta.dart';
@@ -20,23 +18,26 @@ class GalleryCubit extends Cubit<GalleryState> {
 
       emit(GalleryLoaded(_gallery));
     } catch (e) {
-      return;
+      emit(GalleryLoaded(_gallery));
     }
   }
 
   Future<void> deleteSelectedImages(List<int> indexes) async {
     try {
+      List<Future> deletions = [];
       _gallery.forEach(
         (groupName, List<GalleryImageFile> imageFiles) {
           imageFiles.forEach((item) {
             if (indexes.contains(item.id)) {
-              fileRepo.deleteImage(item.file.path);
+              deletions.add(fileRepo.deleteImage(item.file.path));
             }
           });
         },
       );
+      await Future.wait(deletions);
       await loadGallery();
-    } catch (e) {}
-    return;
+    } catch (e) {
+      await loadGallery();
+    }
   }
 }

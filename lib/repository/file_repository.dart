@@ -4,9 +4,19 @@ import 'package:intl/intl.dart';
 import 'dart:io';
 
 class FileRepository {
+  static int _counter = 0;
+
   Future<String> copyImage(filepath) async {
     final path = await _getExternalPath();
-    final newFile = File('$path/${_generateFilename()}');
+    String filename = _generateFilename();
+    File newFile = File('$path/$filename');
+    
+    // Ensure unique filename
+    while (await newFile.exists()) {
+      filename = _generateFilename();
+      newFile = File('$path/$filename');
+    }
+    
     await File(filepath).copy(newFile.path);
     return newFile.path;
   }
@@ -27,8 +37,9 @@ class FileRepository {
 
   String _generateFilename() {
     DateTime now = DateTime.now();
-    String formattedDate = DateFormat('yyyyMMdd_HHmmss').format(now);
-    return formattedDate;
+    String formattedDate = DateFormat('yyyyMMdd_HHmmssSSS').format(now);
+    _counter = (_counter + 1) % 1000;
+    return '${formattedDate}_$_counter';
   }
 
   String formatDate(DateTime date) {

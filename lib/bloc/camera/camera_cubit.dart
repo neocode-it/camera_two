@@ -185,24 +185,37 @@ class CameraCubit extends Cubit<CameraState> {
     }
   }
 
-  Future<void> takePicture() async {
+  Future<bool> takePicture() async {
     if (_controller == null || !_controller!.value.isInitialized) {
-      return;
+      return false;
     }
     if (_controller!.value.isTakingPicture) {
-      return;
+      return false;
     }
 
     try {
       XFile file = await _controller!.takePicture();
+      _saveImage(file);
+      return true;
+    } catch (e) {
+      _messageCubit.newMessage("Fehler beim Erstellen des Bildes");
+      return false;
+    }
+  }
 
+  Future<void> _saveImage(XFile file) async {
+    try {
       String newPath = await fileRepo.copyImage(file.path);
+      if (isClosed) return;
+
       _messageCubit.newMessage("Bild erstellt");
       if (state is CameraReady) {
         emit((state as CameraReady).copyWith(lastImage: File(newPath)));
       }
     } catch (e) {
-      _messageCubit.newMessage("Fehler beim Erstellen des Bildes");
+      if (!isClosed) {
+        _messageCubit.newMessage("Fehler beim Speichern des Bildes");
+      }
     }
   }
 

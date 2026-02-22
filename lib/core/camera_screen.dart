@@ -256,8 +256,10 @@ class _CameraScreenState extends State<CameraScreen>
                  CaptureButton(
                    size: 70,
                    onPressed: () async {
-                     _flashController.forward(from: 0.0);
-                     await _camCubit.takePicture();
+                     bool captured = await _camCubit.takePicture();
+                     if (captured) {
+                       _flashController.forward(from: 0.0);
+                     }
                    },
                  ),
                  
@@ -461,8 +463,10 @@ class _CameraScreenState extends State<CameraScreen>
            CaptureButton(
              size: 80,
              onPressed: () async {
-               _flashController.forward(from: 0.0);
-               await _camCubit.takePicture();
+               bool captured = await _camCubit.takePicture();
+               if (captured) {
+                 _flashController.forward(from: 0.0);
+               }
              },
            ),
            
