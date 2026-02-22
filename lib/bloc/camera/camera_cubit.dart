@@ -185,6 +185,11 @@ class CameraCubit extends Cubit<CameraState> {
     }
   }
 
+  bool get canTakePicture =>
+      _controller != null &&
+      _controller!.value.isInitialized &&
+      !_controller!.value.isTakingPicture;
+
   Future<bool> takePicture() async {
     if (_controller == null || !_controller!.value.isInitialized) {
       return false;

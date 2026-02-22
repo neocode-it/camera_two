@@ -255,10 +255,10 @@ class _CameraScreenState extends State<CameraScreen>
                  // Shutter Button (Center)
                  CaptureButton(
                    size: 70,
-                   onPressed: () async {
-                     bool captured = await _camCubit.takePicture();
-                     if (captured) {
+                   onPressed: () {
+                     if (_camCubit.canTakePicture) {
                        _flashController.forward(from: 0.0);
+                       _camCubit.takePicture();
                      }
                    },
                  ),
@@ -462,10 +462,10 @@ class _CameraScreenState extends State<CameraScreen>
            // Shutter Button
            CaptureButton(
              size: 80,
-             onPressed: () async {
-               bool captured = await _camCubit.takePicture();
-               if (captured) {
+             onPressed: () {
+               if (_camCubit.canTakePicture) {
                  _flashController.forward(from: 0.0);
+                 _camCubit.takePicture();
                }
              },
            ),
