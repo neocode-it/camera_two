@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
-import 'package:gallery_two/classes/gallery_image_file.dart';
+import 'package:outtake/classes/gallery_image_file.dart';
 import 'package:meta/meta.dart';
 
-import 'package:gallery_two/repository/file_repository.dart';
+import 'package:outtake/repository/file_repository.dart';
 
 part 'gallerycubit_state.dart';
 

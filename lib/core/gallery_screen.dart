@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gallery_two/bloc/gallery/gallerycubit_cubit.dart';
-import 'package:gallery_two/bloc/selection/selection_cubit.dart';
-import 'package:gallery_two/classes/gallery_image_file.dart';
-import 'package:gallery_two/core/widgets/custom_image_viewer.dart';
+import 'package:outtake/bloc/gallery/gallerycubit_cubit.dart';
+import 'package:outtake/bloc/selection/selection_cubit.dart';
+import 'package:outtake/classes/gallery_image_file.dart';
+import 'package:outtake/core/widgets/custom_image_viewer.dart';
 
 class GalleryScreen extends StatefulWidget {
   const GalleryScreen({super.key});

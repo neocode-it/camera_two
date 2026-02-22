@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gallery_two/bloc/camera/camera_cubit.dart';
-import 'package:gallery_two/bloc/camera_message/camera_message_cubit.dart';
-import 'package:gallery_two/bloc/gallery/gallerycubit_cubit.dart';
-import 'package:gallery_two/bloc/navigation/navigation_cubit.dart';
-import 'package:gallery_two/bloc/selection/selection_cubit.dart';
-import 'package:gallery_two/core/camera_screen.dart';
-import 'package:gallery_two/core/gallery_screen.dart';
+import 'package:outtake/bloc/camera/camera_cubit.dart';
+import 'package:outtake/bloc/camera_message/camera_message_cubit.dart';
+import 'package:outtake/bloc/gallery/gallerycubit_cubit.dart';
+import 'package:outtake/bloc/navigation/navigation_cubit.dart';
+import 'package:outtake/bloc/selection/selection_cubit.dart';
+import 'package:outtake/core/camera_screen.dart';
+import 'package:outtake/core/gallery_screen.dart';
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});

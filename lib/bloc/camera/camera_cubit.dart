@@ -4,8 +4,8 @@ import 'package:flutter/material.dart'; // Add this for Offset and other UI type
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gallery_two/bloc/camera_message/camera_message_cubit.dart';
-import 'package:gallery_two/repository/file_repository.dart';
+import 'package:outtake/bloc/camera_message/camera_message_cubit.dart';
+import 'package:outtake/repository/file_repository.dart';
 
 import 'package:permission_handler/permission_handler.dart';
 import 'package:camera/camera.dart';

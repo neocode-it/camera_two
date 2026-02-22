@@ -1,4 +1,4 @@
-package com.example.gallery_two
+package com.neofix.outtake
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,11 +1,11 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gallery_two/bloc/camera/camera_cubit.dart';
-import 'package:gallery_two/bloc/camera_message/camera_message_cubit.dart';
-import 'package:gallery_two/core/gallery_screen.dart';
-import 'package:gallery_two/core/widgets/capture_button.dart';
-import 'package:gallery_two/core/widgets/zoom_slider.dart';
+import 'package:outtake/bloc/camera/camera_cubit.dart';
+import 'package:outtake/bloc/camera_message/camera_message_cubit.dart';
+import 'package:outtake/core/gallery_screen.dart';
+import 'package:outtake/core/widgets/capture_button.dart';
+import 'package:outtake/core/widgets/zoom_slider.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});

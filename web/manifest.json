@@ -1,6 +1,6 @@
 {
-    "name": "gallery_two",
-    "short_name": "gallery_two",
+    "name": "outtake",
+    "short_name": "outtake",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

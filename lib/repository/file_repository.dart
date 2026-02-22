@@ -1,4 +1,4 @@
-import 'package:gallery_two/classes/gallery_image_file.dart';
+import 'package:outtake/classes/gallery_image_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';

@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
-import 'package:gallery_two/classes/camera_message.dart';
+import 'package:outtake/classes/camera_message.dart';
 
 part 'camera_message_state.dart';
 
