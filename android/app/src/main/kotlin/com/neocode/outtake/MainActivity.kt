@@ -1,4 +1,4 @@
-package com.neofix.outtake
+package com.neocode.outtake
 
 import io.flutter.embedding.android.FlutterActivity
 

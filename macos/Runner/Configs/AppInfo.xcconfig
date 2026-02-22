@@ -8,7 +8,7 @@
 PRODUCT_NAME = outtake
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.galleryTwo
+PRODUCT_BUNDLE_IDENTIFIER = com.neocode.outtake
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 com.neocode. All rights reserved.
