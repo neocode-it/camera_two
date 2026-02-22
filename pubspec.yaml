@@ -1,5 +1,5 @@
 name: gallery_two
-description: "A new Flutter project."
+description: "Outtake - A secondary camera app."
 publish_to: 'none'
 version: 0.1.0
 
@@ -8,7 +8,6 @@ environment:
 
 dependencies:
   camera: ^0.11.4
-  easy_image_viewer: ^1.5.1
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
@@ -21,6 +20,19 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon-transparent.png"
+  min_sdk_android: 21
+  web:
+    generate: false
+  windows:
+    generate: false
+  macos:
+    generate: false
 
 flutter:
   uses-material-design: true
