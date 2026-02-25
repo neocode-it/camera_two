@@ -4,47 +4,63 @@ import 'package:intl/intl.dart';
 import 'dart:io';
 
 class FileRepository {
-  static int _counter = 0;
+  Future<Directory?> _getNewMediaDirectory() async {
+    final directory = await getExternalStorageDirectory();
+    if (directory == null) return null;
+
+    String path = directory.path;
+    // Replace Android/data with Android/media
+    if (path.contains("Android/data")) {
+      path = path.replaceFirst("Android/data", "Android/media");
+    }
+    // Remove /files suffix if present
+    if (path.endsWith("/files")) {
+      path = path.substring(0, path.length - 6);
+    }
+
+    final dir = Directory(path);
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return dir;
+  }
+
+  Future<Directory?> _getOldMediaDirectory() async {
+    final directory = await getExternalStorageDirectory();
+    if (directory == null) return null;
+    return Directory('${directory.path}/media');
+  }
 
   Future<String> copyImage(filepath) async {
-    final path = await _getExternalPath();
+    final mediaDir = await _getNewMediaDirectory();
+    if (mediaDir == null) {
+      throw const FileSystemException("Storage location not found");
+    }
+
     String filename = _generateFilename();
-    File newFile = File('$path/$filename');
-    
+    File newFile = File('${mediaDir.path}/$filename.jpg');
+
     // Ensure unique filename
     while (await newFile.exists()) {
       filename = _generateFilename();
-      newFile = File('$path/$filename');
+      newFile = File('${mediaDir.path}/$filename.jpg');
     }
-    
+
     await File(filepath).copy(newFile.path);
     return newFile.path;
-  }
-
-  Future<String> _getExternalPath() async {
-    final directory = await getExternalStorageDirectory();
-
-    if (directory == null) {
-      throw const FileSystemException("Storage location not found");
-    }
-    final path = "${directory.path}/media";
-    final customDir = Directory(path);
-    if (!(await customDir.exists())) {
-      await customDir.create(recursive: true);
-    }
-    return customDir.path;
   }
 
   String _generateFilename() {
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('yyyyMMdd_HHmmssSSS').format(now);
-    _counter = (_counter + 1) % 1000;
-    return '${formattedDate}_$_counter';
+    return formattedDate;
   }
 
   String formatDate(DateTime date) {
     final now = DateTime.now();
-    final difference = now.difference(date).inDays;
+    final today = DateTime(now.year, now.month, now.day);
+    final inputDate = DateTime(date.year, date.month, date.day);
+    final difference = today.difference(inputDate).inDays;
 
     if (difference == 0) {
       return "Heute";
@@ -57,33 +73,67 @@ class FileRepository {
     }
   }
 
+  DateTime _getDateFromFile(FileSystemEntity file) {
+    if (file is! File) return DateTime.now();
+    String filename = file.uri.pathSegments.last;
+    // Assuming format yyyyMMdd_HHmmss... or yyyyMMdd_HHmmss.jpg
+    try {
+      if (filename.length >= 15) {
+        String datePart = filename.substring(0, 15);
+        return DateFormat('yyyyMMdd_HHmmss').parse(datePart);
+      }
+    } catch (e) {
+      // Fallback to modification time if parsing fails
+    }
+    return file.lastModifiedSync();
+  }
+
   Future<Map<String, List<GalleryImageFile>>> getGallery() async {
     Map<String, List<GalleryImageFile>> imagesGroupedByDate = {};
+    List<FileSystemEntity> files = [];
 
-    final directory = await getExternalStorageDirectory();
-    if (directory == null) {
-      return imagesGroupedByDate;
+    final oldDir = await _getOldMediaDirectory();
+    if (oldDir != null && await oldDir.exists()) {
+      try {
+        files.addAll(oldDir.listSync(recursive: true));
+      } catch (e) {
+        // Ignore errors reading old dir
+      }
     }
-    final mediaDir = Directory('${directory.path}/media');
-    if (!mediaDir.existsSync()) {
-      return imagesGroupedByDate;
-    }
-    final List<FileSystemEntity> files = mediaDir.listSync(recursive: true);
 
-    // Sort by modification time, newest first
-    files.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+    final newDir = await _getNewMediaDirectory();
+    if (newDir != null && await newDir.exists()) {
+      try {
+        files.addAll(newDir.listSync(recursive: true));
+      } catch (e) {
+        // Ignore errors reading new dir
+      }
+    }
+
+    // Sort by date from filename, newest first
+    files.sort((a, b) {
+      return _getDateFromFile(b).compareTo(_getDateFromFile(a));
+    });
 
     int index = 0;
     for (var file in files) {
       if (file is File) {
-        String date = file.lastModifiedSync().toString().split(" ")[0];
-        date = formatDate(DateTime.parse(date));
-        if (imagesGroupedByDate.containsKey(date)) {
-          imagesGroupedByDate[date]!.add(GalleryImageFile(index, file));
-          index++;
-        } else {
-          imagesGroupedByDate[date] = [GalleryImageFile(index, file)];
-          index++;
+        try {
+          DateTime dateFromFile = _getDateFromFile(file);
+          // Normalize to date (strip time)
+          DateTime dateOnly = DateTime(dateFromFile.year, dateFromFile.month, dateFromFile.day);
+          String date = formatDate(dateOnly);
+
+          if (imagesGroupedByDate.containsKey(date)) {
+            imagesGroupedByDate[date]!.add(GalleryImageFile(index, file));
+            index++;
+          } else {
+            imagesGroupedByDate[date] = [GalleryImageFile(index, file)];
+            index++;
+          }
+        } catch (e) {
+          // Skip problematic files
+          continue;
         }
       }
     }
@@ -98,19 +148,22 @@ class FileRepository {
   }
 
   Future<File?> getLastImage() async {
-    final directory = await getExternalStorageDirectory();
-    if (directory == null) {
-      return null;
+    List<FileSystemEntity> files = [];
+
+    final oldDir = await _getOldMediaDirectory();
+    if (oldDir != null && await oldDir.exists()) {
+       try { files.addAll(oldDir.listSync(recursive: true)); } catch (_) {}
     }
-    final mediaDir = Directory('${directory.path}/media');
-    if (!mediaDir.existsSync()) {
-      return null;
+
+    final newDir = await _getNewMediaDirectory();
+    if (newDir != null && await newDir.exists()) {
+       try { files.addAll(newDir.listSync(recursive: true)); } catch (_) {}
     }
-    final List<FileSystemEntity> files = mediaDir.listSync(recursive: true);
+
     if (files.isEmpty) return null;
 
-    // Sort by modification time, newest first
-    files.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+    // Sort by modification time/date, newest first
+    files.sort((a, b) => _getDateFromFile(b).compareTo(_getDateFromFile(a)));
 
     for (var file in files) {
       if (file is File) {
@@ -122,18 +175,27 @@ class FileRepository {
 
   Future<int> deleteImagesOlderThan(Duration duration) async {
     int count = 0;
-    final directory = await getExternalStorageDirectory();
-    if (directory == null) return 0;
+    List<FileSystemEntity> files = [];
+    
+    final oldDir = await _getOldMediaDirectory();
+    if (oldDir != null && await oldDir.exists()) {
+       try { files.addAll(oldDir.listSync(recursive: true)); } catch (_) {}
+    }
 
-    final mediaDir = Directory('${directory.path}/media');
-    if (!mediaDir.existsSync()) return 0;
+    final newDir = await _getNewMediaDirectory();
+    if (newDir != null && await newDir.exists()) {
+       try { files.addAll(newDir.listSync(recursive: true)); } catch (_) {}
+    }
 
     final cutoff = DateTime.now().subtract(duration);
-    final List<FileSystemEntity> files = mediaDir.listSync(recursive: true);
 
     for (var file in files) {
       if (file is File) {
-        if (file.lastModifiedSync().isBefore(cutoff)) {
+        // Use lastModifiedSync for deletion check, as that's the actual file property
+        // But maybe we should use the parsed date? 
+        // Typically "older than" refers to capture time.
+        // Let's use _getDateFromFile to be consistent.
+        if (_getDateFromFile(file).isBefore(cutoff)) {
           await file.delete();
           count++;
         }
