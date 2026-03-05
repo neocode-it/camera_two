@@ -43,6 +43,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
               },
             );
           }
+          
+          if (galleryState is GalleryError) {
+            return _errorView(galleryState.message);
+          }
+          
           return const Center(
             child: CircularProgressIndicator(),
           );
@@ -272,6 +277,52 @@ class _GalleryScreenState extends State<GalleryScreen> {
           Icons.check_circle,
           color: Colors.white,
           size: 60,
+        ),
+      ),
+    );
+  }
+
+  Widget _errorView(String errorMessage) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 80,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Fehler beim Laden der Galerie',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              errorMessage,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () {
+                context.read<GalleryCubit>().loadGallery();
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Erneut versuchen'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

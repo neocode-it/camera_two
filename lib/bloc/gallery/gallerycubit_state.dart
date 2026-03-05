@@ -9,3 +9,8 @@ class GalleryLoaded extends GalleryState {
   GalleryLoaded(this.gallery);
   final Map<String, List<GalleryImageFile>> gallery;
 }
+
+class GalleryError extends GalleryState {
+  GalleryError(this.message);
+  final String message;
+}

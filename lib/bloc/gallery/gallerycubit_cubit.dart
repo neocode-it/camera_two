@@ -18,7 +18,7 @@ class GalleryCubit extends Cubit<GalleryState> {
 
       emit(GalleryLoaded(_gallery));
     } catch (e) {
-      emit(GalleryLoaded(_gallery));
+      emit(GalleryError('Fehler beim Laden der Galerie: $e'));
     }
   }
 
@@ -37,7 +37,7 @@ class GalleryCubit extends Cubit<GalleryState> {
       await Future.wait(deletions);
       await loadGallery();
     } catch (e) {
-      await loadGallery();
+      emit(GalleryError('Fehler beim Löschen: $e'));
     }
   }
 
@@ -48,7 +48,7 @@ class GalleryCubit extends Cubit<GalleryState> {
       count = await fileRepo.deleteImagesOlderThan(duration);
       await loadGallery();
     } catch (e) {
-      await loadGallery();
+      emit(GalleryError('Fehler beim Löschen alter Bilder: $e'));
     }
     return count;
   }
