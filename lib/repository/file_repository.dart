@@ -67,7 +67,8 @@ class FileRepository {
     } else if (difference == 1) {
       return "Gestern";
     } else if (difference < 7) {
-      return DateFormat('EEEE', 'de_DE').format(date);
+      // Use day name with date to avoid collisions for same weekday in different weeks
+      return '${DateFormat('EEEE', 'de_DE').format(date)}, ${DateFormat('d. MMMM', 'de_DE').format(date)}';
     } else {
       return DateFormat('yyyy-MM-dd').format(date);
     }
@@ -75,16 +76,19 @@ class FileRepository {
 
   DateTime _getDateFromFile(FileSystemEntity file) {
     if (file is! File) return DateTime.now();
+    
     String filename = file.uri.pathSegments.last;
-    // Assuming format yyyyMMdd_HHmmss... or yyyyMMdd_HHmmss.jpg
+    // Try to parse date from filename: yyyyMMdd_HHmmss... or yyyyMMdd_HHmmss.jpg
     try {
       if (filename.length >= 15) {
         String datePart = filename.substring(0, 15);
         return DateFormat('yyyyMMdd_HHmmss').parse(datePart);
       }
     } catch (e) {
-      // Fallback to modification time if parsing fails
+      // Parsing failed, will use modification time
     }
+    
+    // Fallback to modification time if parsing fails
     return file.lastModifiedSync();
   }
 
@@ -117,24 +121,34 @@ class FileRepository {
 
     int index = 0;
     for (var file in files) {
-      if (file is File) {
-        try {
-          DateTime dateFromFile = _getDateFromFile(file);
-          // Normalize to date (strip time)
-          DateTime dateOnly = DateTime(dateFromFile.year, dateFromFile.month, dateFromFile.day);
-          String date = formatDate(dateOnly);
-
-          if (imagesGroupedByDate.containsKey(date)) {
-            imagesGroupedByDate[date]!.add(GalleryImageFile(index, file));
-            index++;
-          } else {
-            imagesGroupedByDate[date] = [GalleryImageFile(index, file)];
-            index++;
-          }
-        } catch (e) {
-          // Skip problematic files
-          continue;
+      // Skip directories - only process files
+      if (file is! File) {
+        continue;
+      }
+      
+      try {
+        // Check if file has valid image extension
+        final extension = file.path.toLowerCase().split('.').last;
+        if (!['jpg', 'jpeg', 'png'].contains(extension)) {
+          continue; // Skip non-image files
         }
+        
+        DateTime dateFromFile = _getDateFromFile(file);
+        
+        // Normalize to date (strip time)
+        DateTime dateOnly = DateTime(dateFromFile.year, dateFromFile.month, dateFromFile.day);
+        String date = formatDate(dateOnly);
+
+        if (imagesGroupedByDate.containsKey(date)) {
+          imagesGroupedByDate[date]!.add(GalleryImageFile(index, file));
+          index++;
+        } else {
+          imagesGroupedByDate[date] = [GalleryImageFile(index, file)];
+          index++;
+        }
+      } catch (e) {
+        // Skip problematic files
+        continue;
       }
     }
     return imagesGroupedByDate;
